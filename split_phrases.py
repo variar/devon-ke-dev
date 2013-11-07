@@ -40,7 +40,7 @@ def main():
 	phrase_list = [l.strip() for l in re.split("(\.|,|!|\?)", text) if l]
 	
 	for phrase in merge_phrases(phrase_list, max_len):
-	  if phrase.endswith(('.',',')):
+	  while phrase.endswith(('.',',')):
 	    phrase=phrase[:-1]
 	  if phrase:
 	    print person.encode("utf-8"), ":", phrase.encode("utf-8")
