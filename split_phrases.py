@@ -65,6 +65,19 @@ def hasPrev(line):
     
   return False
 
+def isConjunction(phrase):
+  conj = [u'и', u'а', u'да', u'но', u'или', u'либо', u'ни', u'то',
+	  u'зато', u'не', u'что', u'чтобы', u'как', u'потому', u'так', u'если', u'хотя',
+	  u'когда', u'лишь', u'едва', u'пока',  u'оттого', 
+	  u'который', u'которая', u'которые', u'которое']
+  l = phrase.lower().strip(' ,')
+  for c in conj:
+    if l == c:
+      return True
+    
+  return False  
+	  
+
 def merge_phrases(phrase_list, max_len=80):
   long_phrase = ''
   for phrase in phrase_list:
@@ -103,12 +116,39 @@ def split_phrase(phrase, max_len=80):
     while len(left) > max_len and re.search(',',left):
       (left, c, r) = left.rpartition(',')
       right = r + ',' + right
+    
+    (l,c,r) = right.partition(',')
+    if len(l) < 15 and (not r or len(r)>15) or (len(l.split()) == 1 and not isConjunction(l)) or len(left) < 15:
+      left = left + ',' + l
+      right = r
       
     yield left
       
     for val in split_phrase(right, max_len):
-      yield val
+      if val:
+	yield val
+	
+def split_phrase2(phrase, max_len=80):
+  if len(phrase) < max_len or not re.search(',',phrase):
+    yield phrase
+  else:
+    (left, c, right) = phrase.rpartition(',')
     
+    while len(left) > max_len and re.search(',',left):
+      (left, c, r) = left.rpartition(',')
+      right = r + ', ' + right.strip()
+      
+    (l,c,r) = right.partition(',')
+    if len(left) < max_len or (len(l)<15 and not r): 
+      left = left + ', ' + l.strip()
+      right = r.strip()
+        
+    yield left
+      
+    for val in split_phrase(right, max_len):
+      if val:
+	yield val
+	
 def main():
   max_len = int(sys.argv[2])
   
@@ -175,7 +215,7 @@ def main():
 	    phrase = phrase.rstrip('.')
 	    
 	  if phrase:
-	    for sub_phrase in split_phrase(phrase, max_len):
+	    for sub_phrase in split_phrase2(phrase, max_len):
 	      outLines.append(personName + ' : ' + sub_phrase.strip().rstrip(",").encode("utf-8"))
 	      
 	    should_add_line = True
